@@ -2,9 +2,6 @@ package com.savindiniranthara.remote;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v7.app.AlertDialog;
@@ -18,10 +15,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Set;
-import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
     public static int REQUEST_ENABLE_BT = 1;
@@ -92,75 +87,4 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    //Create a broadcast receiver for ACTION_FOUND
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if(BluetoothDevice.ACTION_FOUND.equals(action)){
-                //A bluetooth device has been found
-                //Get its info from the intent
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                String deviceName = device.getName();
-                String deviceHardwareAddress = device.getAddress();
-            }
-        }
-    };
-
-    @Override
-    protected void onDestroy(){
-        super.onDestroy();
-        unregisterReceiver(mReceiver);
-    }
-
-    //Connect as client
-    private class ConnectThread extends Thread{
-        private final BluetoothSocket mmSocket;
-        private final BluetoothDevice mmDevice;
-
-        public ConnectThread(BluetoothDevice device){
-            BluetoothSocket tmp = null;
-            mmDevice = device;
-
-            try {
-                //get a Bluetooth socket to connect with the given bluetooth device
-                tmp = device.createRfcommSocketToServiceRecord(UUID.randomUUID());
-            }catch (IOException e){
-                //creating socket failed
-            }
-
-            mmSocket = tmp;
-        }
-
-        public void run(){
-            //Cancel discovery because it otherwise slows down the connection
-            mBluetoothAdapter.cancelDiscovery();
-
-            try {
-                //Connect to the remote device through the socket
-                mmSocket.connect();
-            }catch (IOException connectException){
-                //Unable to connect, close the socket and return
-                try{
-                    mmSocket.close();
-                }catch (IOException closeException){
-                    //could not close the socket
-                }
-                return;
-            }
-
-            //connection successfull
-            //Perform the work associated with the connection in a separate thread
-            //TODO: manageMyConnectedSocket(mmSocket);
-        }
-
-        public void cancel(){
-            //closes the client socket and causes the thread to finish
-            try{
-                mmSocket.close();
-            }catch (IOException e){
-                //could not close the socket
-            }
-        }
-    }
 }
