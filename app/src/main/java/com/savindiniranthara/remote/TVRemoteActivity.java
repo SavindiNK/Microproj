@@ -63,35 +63,27 @@ public class TVRemoteActivity extends AppCompatActivity {
 
         @Override
         protected Void doInBackground(Void... devices) {
-            try
-            {
-                if (btSocket == null || !isBtConnected)
-                {
+            try {
+                if (btSocket == null || !isBtConnected) {
                     myBluetooth = BluetoothAdapter.getDefaultAdapter();
                     BluetoothDevice remoteDevice = myBluetooth.getRemoteDevice(address);
                     btSocket = remoteDevice.createInsecureRfcommSocketToServiceRecord(UUID.randomUUID());
                     BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
                     btSocket.connect();
                 }
-            }
-            catch (IOException e)
-            {
-                ConnectSuccess = false;//if the try failed, you can check the exception here
+            } catch (IOException e) {
+                ConnectSuccess = false;
             }
             return null;
         }
         @Override
-        protected void onPostExecute(Void result) //after the doInBackground, it checks if everything went fine
-        {
+        protected void onPostExecute(Void result) {
             super.onPostExecute(result);
 
-            if (!ConnectSuccess)
-            {
+            if (!ConnectSuccess) {
                 Toast.makeText(getApplicationContext(),"Connection Failed",Toast.LENGTH_LONG).show();
                 finish();
-            }
-            else
-            {
+            } else {
                 Toast.makeText(getApplicationContext(),"Connected..",Toast.LENGTH_SHORT).show();
                 isBtConnected = true;
             }
