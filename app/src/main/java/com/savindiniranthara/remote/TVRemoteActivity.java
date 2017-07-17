@@ -1,6 +1,11 @@
 package com.savindiniranthara.remote;
 
+import android.app.ProgressDialog;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -9,6 +14,7 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import java.io.IOException;
+import java.util.UUID;
 
 
 public class TVRemoteActivity extends AppCompatActivity {
@@ -17,6 +23,12 @@ public class TVRemoteActivity extends AppCompatActivity {
     String address;
     ToggleButton modeButton;
     String mode;
+    boolean learnMode;
+
+    ProgressDialog progress;
+    BluetoothAdapter myBluetooth = null;
+    BluetoothSocket btSocket = null;
+    private boolean isBtConnected = false;
 
 
     @Override
@@ -32,11 +44,51 @@ public class TVRemoteActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if(isChecked){
                     mode = "~L";
+                    learnMode = true;
                 }else {
                     mode = "~O";
+                    learnMode = false;
                 }
             }
         });
+    }
+
+    private class ConnectBT extends AsyncTask<Void, Void, Void>{
+        private boolean ConnectSuccess = true;
+
+        @Override
+        protected void onPreExecute() {
+            progress = ProgressDialog.show(TVRemoteActivity.this, "Connecting...", "Please wait!!!");  //show a progress dialog
+        }
+
+        @Override
+        protected Void doInBackground(Void... devices) {
+            try {
+                if (btSocket == null || !isBtConnected) {
+                    myBluetooth = BluetoothAdapter.getDefaultAdapter();
+                    BluetoothDevice remoteDevice = myBluetooth.getRemoteDevice(address);
+                    btSocket = remoteDevice.createInsecureRfcommSocketToServiceRecord(UUID.randomUUID());
+                    BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
+                    btSocket.connect();
+                }
+            } catch (IOException e) {
+                ConnectSuccess = false;
+            }
+            return null;
+        }
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+
+            if (!ConnectSuccess) {
+                Toast.makeText(getApplicationContext(),"Connection Failed",Toast.LENGTH_LONG).show();
+                finish();
+            } else {
+                Toast.makeText(getApplicationContext(),"Connected..",Toast.LENGTH_SHORT).show();
+                isBtConnected = true;
+            }
+            progress.dismiss();
+        }
     }
 
     public void sendCode(String code){
@@ -52,6 +104,7 @@ public class TVRemoteActivity extends AppCompatActivity {
 
     public String getCode(){
         //get code from storage
+        return null;
     }
 
     public void power(View view){
